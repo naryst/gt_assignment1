@@ -1,4 +1,4 @@
-from  dataclasses import dataclass
+from dataclasses import dataclass
 
 
 day = 31
@@ -18,18 +18,24 @@ second_player_available_position = set(range(1, day + month + year + 1))
 class Player:
     final_positions: set
     available_positions: set
-    winning_strategy_positions: set
+    winning_strategy_from_your_turn: set
+    winning_strategy_from_opponent_turn: set
+    your_turn: bool
     name: str
 
 
 first_plyer = Player(final_positions=first_player_final_positions,
                      available_positions=first_player_available_position,
-                     winning_strategy_positions=set(),
+                     winning_strategy_from_your_turn=set(),
+                     winning_strategy_from_opponent_turn=first_player_final_positions,
+                     your_turn=True,
                      name='spoiler')
 
 second_player = Player(final_positions=second_player_final_positions,
                        available_positions=second_player_available_position,
-                       winning_strategy_positions=set(),
+                       winning_strategy_from_your_turn=set(),
+                       winning_strategy_from_opponent_turn=second_player_final_positions,
+                       your_turn=False,
                        name='duplicator')
 
 
@@ -39,7 +45,7 @@ def if_move_is_possible(p, q):
 
 def possible_moves_from_position(p):
     result = []
-    for i in range(day+month):
+    for i in range(1, day+month + 1):
         if (p + i) <= day + month + year:
             result.append(p+i)
     return set(result)
@@ -47,41 +53,43 @@ def possible_moves_from_position(p):
 
 def exists_move_to_winning_position(p, player):
     moves = possible_moves_from_position(p)
-    have_winning_move = False
     for move in moves:
-        if move in player.winning_strategy_positions:
-            have_winning_move = True
-            break
-    return have_winning_move
+        if move in player.winning_strategy_from_opponent_turn:
+            return True
+    return False
 
 
 def all_moves_to_winning_position(p, player):
     moves = possible_moves_from_position(p)
     for move in moves:
-        if move not in player.winning_strategy_positions:
+        if move not in player.winning_strategy_from_your_turn:
             return False
     return True
 
 
-def FPG_solution(player_to_wining, opposite_player):
-    strategy = player_to_wining.final_positions
-    first_subset = set()
-    second_subset = set()
-    for p in (player_to_wining.available_positions - player_to_wining.final_positions):
-        if exists_move_to_winning_position(p, player_to_wining):
-            first_subset.add(p)
-    for p in (opposite_player.available_positions - opposite_player.final_positions):
-        if all_moves_to_winning_position(p, player_to_wining):
-            second_subset.add(p)
-    strategy = strategy.union(first_subset)
-    strategy = strategy.union(second_subset)
-    return strategy
+def FPG_solution(player_to_wining):
+    your_move_subset = set()
+    opponent_move_subset = set()
+    for position in (player_to_wining.available_positions - player_to_wining.final_positions):
+        if player_to_wining.your_turn:
+            if exists_move_to_winning_position(position, player_to_wining):
+                player_to_wining.winning_strategy_from_your_turn.add(position)
+        else:
+            if all_moves_to_winning_position(position, player_to_wining):
+                player_to_wining.winning_strategy_from_opponent_turn.add(position)
+    player_to_wining.your_turn = not player_to_wining.your_turn
 
 
 def main():
-    for i in range(3):
-        first_plyer.winning_strategy_positions = FPG_solution(first_plyer, second_player)
-        # print(first_plyer.winning_strategy_positions)
+    while True:
+        before = first_plyer.winning_strategy_from_your_turn.union(first_plyer.winning_strategy_from_opponent_turn)
+        FPG_solution(first_plyer)
+        after = first_plyer.winning_strategy_from_your_turn.union(first_plyer.winning_strategy_from_opponent_turn)
+        if before == after:
+            break
+    print(f'First player winning strategy: {first_plyer.winning_strategy_from_your_turn}')
+    print(f'First player losing strategy: {first_plyer.winning_strategy_from_opponent_turn}')
+    print(list(filter(lambda x: x > 1931, first_plyer.winning_strategy_from_opponent_turn)))
 
 
 if __name__ == '__main__':
