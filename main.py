@@ -190,10 +190,12 @@ def main():
                 break
             elif start_mode == 2:
                 print(f"Choose start position from 1 to {day + month + year}")
-                start_position = int(input())
-                if start_position not in my_player.available_positions:
-                    print("Wrong position, try again")
-                    continue
+                while True:
+                    start_position = int(input())
+                    if start_position not in my_player.available_positions:
+                        print("Wrong position, try again")
+                        continue
+                    break
                 break
             else:
                 print("Wrong choice")
