@@ -1,10 +1,29 @@
 from dataclasses import dataclass
 import random
+import sys
 
 # individual parameters according to the task
 day = 31
 month = 10
 year = 2001
+
+
+# class for logging game process
+class Logger(object):
+
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.game_number = 0
+
+    def write(self, message):
+
+        with open(f'logfile_{self.game_number}_game.log', "a", encoding='utf-8') as self.log:
+            self.log.write(message)
+        self.terminal.write(message)
+
+    def flush(self):
+        pass
+
 
 # positions for the game
 game_positions = range(1, day + month + year + 1)
@@ -101,6 +120,7 @@ def FPG_solution(player_to_wining):
 
 # function to interact with user to make manual plays
 def player_manually_move(current_position):
+    print('If don\'t want to make a move to play anymore, enter 0')
     print(
         f"It is your turn. Current position is "
         f"{current_position}. Possible moves are from"
@@ -114,6 +134,8 @@ def player_manually_move(current_position):
     while True:  # check that entered data is move and it is possible
         try:
             move = int(input())
+            if move == 0:
+                sys.exit(0)
             if move not in possible_moves_from_position(current_position):
                 print("Wrong move, try again")
                 continue
@@ -177,8 +199,10 @@ def main():
             break
     start_position = None
     game_mode = None
+    print('------------------')
+    print("New game started!")
     print(
-        "How start position should be chosen? Press 1 to chose it randomly, 2 to chose it manually"
+        "How start position should be chosen? Press 1 to choose it randomly, 2 to choose it manually"
     )
 
     # start position choose from the user with exception handling
@@ -187,8 +211,10 @@ def main():
             start_mode = int(input())
             if start_mode == 1:
                 start_position = random.randint(1, day + month + year)
+                print(f"Start position was chosen randomly and it is {start_position}")
                 break
             elif start_mode == 2:
+                print("You have chosen start position manually")
                 print(f"Choose start position from 1 to {day + month + year}")
                 while True:
                     start_position = int(input())
@@ -196,6 +222,7 @@ def main():
                         print("Wrong position, try again")
                         continue
                     break
+                print(f"Start position was chosen manually and it is {start_position}")
                 break
             else:
                 print("Wrong choice")
@@ -203,7 +230,7 @@ def main():
         except ValueError:
             print("Wrong input, try again")
             continue
-    print("Chose playing mode: 1 - smart, 2 - random, 3 - advisor")
+    print("Choose playing mode: 1 - smart, 2 - random, 3 - advisor")
 
     # game mode choose from the user with exception handling
     while True:
@@ -225,6 +252,7 @@ def main():
 
     # simulation for game mode 2
     if game_mode == 2:
+        print("You chose random mode")
         while True:
             # manual move from player
             move = player_manually_move(current_position)
@@ -245,6 +273,7 @@ def main():
 
     # simulation for game mode 1
     if game_mode == 1:
+        print("You chose smart mode")
         while True:
             # manual move from player
             move = player_manually_move(current_position)
@@ -261,6 +290,7 @@ def main():
 
     # simulation for game mode 3
     if game_mode == 3:
+        print("You chose advisor mode")
         while True:
             # advise to the player from the winning strategy
             if current_position in my_player.winning_strategy_from_your_turn:
@@ -285,4 +315,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    my_logger = Logger()
+    sys.stdout = my_logger
+    while True:
+        main()
+        my_logger.game_number += 1
+
